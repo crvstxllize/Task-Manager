@@ -1,0 +1,117 @@
+{% macro icon(name, class_name='') -%}
+{% set paths = {
+'grid': 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
+'check': 'm5 12 4 4L19 6',
+'plus': 'M12 5v14 M5 12h14',
+'list': 'M9 6h12 M9 12h12 M9 18h12 M3 6h.01 M3 12h.01 M3 18h.01',
+'clock': 'M12 8v4l3 2 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
+'trash': 'M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7',
+'arrow': 'M7 17 17 7 M7 7h10v10',
+'code': 'm8 7-5 5 5 5 m8-10 5 5-5 5 M14 4l-4 16',
+'spark': 'm12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z'
+} %}
+<svg class="icon {{ class_name }}" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ paths[name] }}"/></svg>
+{%- endmacro %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="DevOps Task Manager — учебный Flask-проект с SQLite и CI/CD.">
+  <title>DevOps Task Manager — Мои задачи</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Основная навигация">
+      <a class="brand" href="{{ url_for('index') }}" aria-label="DevOps Task Manager, главная">
+        <span class="brand-mark">{{ icon('code') }}</span>
+        <span>DevOps<span class="brand-subtitle">Task Manager</span></span>
+      </a>
+      <p class="nav-label">РАБОЧЕЕ ПРОСТРАНСТВО</p>
+      <nav>
+        <a class="nav-link selected" href="{{ url_for('index') }}" aria-current="page">{{ icon('grid') }} Обзор задач <span class="nav-count">{{ total }}</span></a>
+        <a class="nav-link" href="#task-form">{{ icon('plus') }} Новая задача</a>
+        <a class="nav-link" href="{{ url_for('health') }}" target="_blank" rel="noopener">{{ icon('code') }} Проверка /health {{ icon('arrow', 'small') }}</a>
+      </nav>
+      <div class="sidebar-note">
+        <span class="note-icon">{{ icon('spark') }}</span>
+        <strong>От идеи до результата</strong>
+        <p>Небольшие задачи.<br>Стабильный процесс.<br>Заметный прогресс.</p>
+        <span class="note-tag">Flask + SQLite</span>
+      </div>
+      <div class="sidebar-footer"><span class="university-mark">S</span><span>Satbayev University<small>DevOps инженерия · СРС №1</small></span></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <span>Рабочее пространство <span class="breadcrumb">/</span> <strong>Мои задачи</strong></span>
+        <span class="project-label"><span class="dot"></span> Учебный проект <span class="avatar">SU</span></span>
+      </header>
+
+      <div class="page-content">
+        <section class="page-heading">
+          <div><p class="eyebrow">ПЛАНИРУЙ. СОЗДАВАЙ. РАЗВИВАЙСЯ.</p><h1>Порядок в задачах.<br><span>Фокус на главном.</span></h1><p class="lead">Все планы в одном месте — от первого шага до готового результата.</p></div>
+          <a class="button button-primary heading-button" href="#task-title">{{ icon('plus') }} Новая задача</a>
+        </section>
+
+        <section class="stats" aria-label="Статистика задач">
+          <article class="stat-card lavender"><div class="stat-top"><span>Всего задач</span><span class="stat-icon">{{ icon('list') }}</span></div><strong data-stat="total">{{ total }}</strong><p>Всё, что вы запланировали</p></article>
+          <article class="stat-card blue"><div class="stat-top"><span>В работе</span><span class="stat-icon">{{ icon('clock') }}</span></div><strong data-stat="active">{{ active }}</strong><p>Следующие шаги к результату</p></article>
+          <article class="stat-card mint"><div class="stat-top"><span>Завершено</span><span class="stat-icon">{{ icon('check') }}</span></div><strong data-stat="completed">{{ completed }}</strong><p>Маленькие и большие победы</p></article>
+        </section>
+
+        <div class="workspace-grid">
+          <section class="task-panel" aria-labelledby="tasks-heading">
+            <div class="panel-heading"><div><h2 id="tasks-heading">Мои задачи <span class="count-pill">{{ total }}</span></h2><p>Освободите голову. Запишите следующий шаг.</p></div><span class="sort-label">{{ icon('list') }} Активные сверху</span></div>
+
+            <form id="task-form" class="add-form" action="{{ url_for('add_task') }}" method="post">
+              <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+              <label class="sr-only" for="task-title">Текст новой задачи</label>
+              <input id="task-title" name="title" type="text" placeholder="Что нужно сделать?" maxlength="{{ max_length }}" value="{{ title }}" required autocomplete="off" {% if error %}aria-invalid="true" aria-describedby="form-error"{% endif %}>
+              <button class="button button-primary" type="submit">{{ icon('plus') }} Добавить</button>
+            </form>
+            {% if error %}<p id="form-error" class="form-error" role="alert">{{ error }}</p>{% endif %}
+            <div class="list-caption"><span>ЗАДАЧА</span><span>ДЕЙСТВИЯ</span></div>
+
+            <ul class="task-list">
+              {% for task in tasks %}
+              <li class="task-row {% if task['completed'] %}is-complete{% endif %}">
+                <form action="{{ url_for('toggle_task', task_id=task['id']) }}" method="post" class="toggle-form">
+                  <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+                  <button class="task-toggle" type="submit" aria-label="{{ 'Вернуть в работу' if task['completed'] else 'Завершить задачу' }}: {{ task['title'] }}" title="{{ 'Вернуть в работу' if task['completed'] else 'Завершить' }}">{{ icon('check') if task['completed'] else '' }}</button>
+                </form>
+                <div class="task-text"><span class="task-title">{{ task['title'] }}</span><span class="task-meta">Задача #{{ '%03d' | format(task['id']) }}</span></div>
+                <span class="status-pill {{ 'status-done' if task['completed'] else 'status-active' }}">{{ 'Готово' if task['completed'] else 'В работе' }}</span>
+                <form action="{{ url_for('delete_task', task_id=task['id']) }}" method="post">
+                  <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
+                  <button class="delete-button" type="submit" aria-label="Удалить задачу: {{ task['title'] }}" title="Удалить задачу">{{ icon('trash') }}</button>
+                </form>
+              </li>
+              {% else %}
+              <li class="empty-state"><span class="empty-icon">{{ icon('list') }}</span><h3>Большие дела начинаются с маленькой задачи</h3><p>Добавьте первый шаг в поле выше.<br>Ваш следующий результат начинается здесь.</p></li>
+              {% endfor %}
+            </ul>
+            <div class="panel-footer"><span>{{ icon('check') }} Изменения сохраняются в SQLite</span><span>До {{ max_length }} символов</span></div>
+          </section>
+
+          <aside class="right-column">
+            <section class="progress-panel" aria-labelledby="progress-heading">
+              <span class="section-kicker">{{ icon('spark') }} ВАШ ПРОГРЕСС</span>
+              <div class="progress-number">{{ progress }}<span>%</span></div>
+              <h2 id="progress-heading">{{ 'Отличная работа!' if total and completed == total else 'Шаг за шагом — вперёд' }}</h2>
+              <p>{% if total %}Завершено {{ completed }} из {{ total }} задач. Каждый выполненный пункт имеет значение.{% else %}Добавьте первую задачу и начните собирать свои маленькие победы.{% endif %}</p>
+              <label class="sr-only" for="task-progress">Процент завершённых задач</label>
+              <progress id="task-progress" value="{{ progress }}" max="100">{{ progress }}%</progress>
+              <div class="progress-caption"><span>Завершено</span><strong>{{ completed }} / {{ total }}</strong></div>
+            </section>
+            <section class="pipeline-panel" aria-labelledby="pipeline-heading"><span class="section-kicker">О ПРОЕКТЕ</span><h2 id="pipeline-heading">Код. Проверка. Запуск.</h2><p>Учебный CI/CD-конвейер<br>на GitHub Actions</p><ol class="pipeline-list"><li><span>01</span> Качество кода <small>Ruff</small></li><li><span>02</span> Автотесты <small>pytest</small></li><li><span>03</span> ZIP-артефакт <small>build</small></li><li><span>04</span> Тестовый запуск <small>/health</small></li></ol><p class="pipeline-disclaimer">Схема процесса. Результаты запусков доступны в GitHub Actions.</p></section>
+          </aside>
+        </div>
+        <footer class="page-footer"><span>DevOps Task Manager <span class="footer-dot">·</span> Создавайте с уверенностью</span><span>Python / Flask / SQLite</span></footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
