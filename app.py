@@ -70,7 +70,7 @@ def create_app(test_config=None):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; style-src 'self'; img-src 'self'; "
-            "script-src 'none'; object-src 'none'; base-uri 'self'; "
+            "script-src 'self'; object-src 'none'; base-uri 'self'; "
             "form-action 'self'; frame-ancestors 'none'"
         )
         return response
@@ -87,7 +87,6 @@ def create_app(test_config=None):
                 total=total,
                 active=total - completed,
                 completed=completed,
-                progress=round(completed / total * 100) if total else 0,
                 error=error,
                 title=title,
                 max_length=MAX_TASK_LENGTH,

@@ -5,3 +5,6 @@
 !templates/index.html
 !static/
 !static/style.css
+!static/theme.js
+!static/tasks.js
+!static/release.js
