@@ -10,7 +10,7 @@ from urllib.parse import urlencode
 from urllib.request import HTTPCookieProcessor, Request, build_opener
 
 
-def check_service(url, timeout=30, crud=False):
+def check_service(url, timeout=30, crud=False, expected_sha=None):
     opener = build_opener(HTTPCookieProcessor(CookieJar()))
     deadline = time.monotonic() + timeout
     last_error = None
@@ -27,6 +27,13 @@ def check_service(url, timeout=30, crud=False):
             time.sleep(0.3)
     else:
         raise RuntimeError(f"Service not ready after {timeout}s: {last_error}")
+
+    if expected_sha:
+        with opener.open(f"{url}/version", timeout=5) as response:
+            revision = json.load(response)["git_sha"]
+            if response.status != 200 or revision != expected_sha:
+                raise RuntimeError(f"Expected revision {expected_sha}, got {revision}")
+        print(f"Verified /version: {revision}", flush=True)
 
     if not crud:
         return
@@ -48,9 +55,11 @@ def check_service(url, timeout=30, crud=False):
         raise RuntimeError("CSRF token missing from rendered form")
     token = token_match[1]
     title = f"HTTP smoke task {time.time_ns()}"
-    html = post("/tasks", {"title": title, "csrf_token": token})
+    post("/tasks", {"title": title, "csrf_token": token})
+    html = page()
     if title not in html:
         raise RuntimeError("Created task not visible")
+    print(f"Verified created task on a fresh GET /: {title}", flush=True)
     # Новая активная задача находится первой по принятому порядку сортировки.
     task_match = re.search(r'action="/tasks/(\d+)/toggle"', html)
     if not task_match:
@@ -81,5 +90,8 @@ if __name__ == "__main__":
     parser.add_argument("--url", default="http://127.0.0.1:5000")
     parser.add_argument("--timeout", type=float, default=30)
     parser.add_argument("--crud", action="store_true")
+    parser.add_argument("--expected-sha")
     arguments = parser.parse_args()
-    check_service(arguments.url.rstrip("/"), arguments.timeout, arguments.crud)
+    check_service(
+        arguments.url.rstrip("/"), arguments.timeout, arguments.crud, arguments.expected_sha
+    )

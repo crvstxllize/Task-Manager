@@ -25,6 +25,17 @@ def test_health(client):
     assert response.json == {"status": "ok"}
 
 
+def test_build_metadata(monkeypatch, tmp_path):
+    sha = "1234567890abcdef" * 2 + "12345678"
+    monkeypatch.setenv("GIT_SHA", sha)
+    monkeypatch.setenv("APP_VERSION", "1.1.0")
+    client = create_app({"DATABASE_PATH": tmp_path / "version.sqlite3"}).test_client()
+    assert client.get("/version").json == {"version": "1.1.0", "git_sha": sha}
+    page = client.get("/").text
+    assert "Версия 1.1.0" in page
+    assert f"<code>{sha[:7]}</code>" in page
+
+
 def test_create_task(client, app, csrf):
     response = client.post("/tasks", data={"title": "  Настроить CI/CD  ", "csrf_token": csrf})
     assert response.status_code == 303
