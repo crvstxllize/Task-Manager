@@ -1,0 +1,7 @@
+**
+!requirements.txt
+!app.py
+!templates/
+!templates/index.html
+!static/
+!static/style.css

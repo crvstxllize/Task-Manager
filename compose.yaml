@@ -1,0 +1,24 @@
+name: devops-task-manager
+services:
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:5001:5000"
+    volumes:
+      - sqlite-data:/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import json, sys, urllib.request
+          with urllib.request.urlopen("http://127.0.0.1:5000/health", timeout=2) as response:
+              sys.exit(0 if response.status == 200 and json.load(response) == {"status": "ok"} else 1)
+      interval: 5s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+volumes:
+  sqlite-data:
