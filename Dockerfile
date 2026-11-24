@@ -16,5 +16,11 @@ COPY templates/ templates/
 COPY static/ static/
 
 USER taskmanager
+ARG APP_VERSION
+ARG GIT_SHA
+RUN python -c "import re,sys; sys.exit(0 if sys.argv[1] and re.fullmatch('[0-9a-f]{40}', sys.argv[2]) else 'Build requires APP_VERSION and the full Git SHA')" "$APP_VERSION" "$GIT_SHA"
+ENV APP_VERSION=$APP_VERSION GIT_SHA=$GIT_SHA
+LABEL org.opencontainers.image.version=$APP_VERSION \
+      org.opencontainers.image.revision=$GIT_SHA
 EXPOSE 5000
 CMD ["python", "-m", "flask", "--app", "app:create_app", "--no-debug", "run", "--host=0.0.0.0", "--port=5000", "--no-reload"]

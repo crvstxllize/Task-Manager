@@ -13,6 +13,8 @@ MAX_TASK_LENGTH = 200
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config.from_mapping(
+        APP_VERSION=os.environ.get("APP_VERSION", "dev"),
+        GIT_SHA=os.environ.get("GIT_SHA", ""),
         SECRET_KEY=os.environ.get("SECRET_KEY") or secrets.token_hex(32),
         DATABASE_PATH=os.environ.get("DATABASE_PATH")
         or str(Path(app.instance_path) / "tasks.sqlite3"),
@@ -100,6 +102,10 @@ def create_app(test_config=None):
     @app.get("/health")
     def health():
         return jsonify(status="ok")
+
+    @app.get("/version")
+    def version():
+        return jsonify(version=app.config["APP_VERSION"], git_sha=app.config["GIT_SHA"] or None)
 
     @app.post("/tasks")
     def add_task():

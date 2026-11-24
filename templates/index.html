@@ -109,7 +109,7 @@
             <section class="pipeline-panel" aria-labelledby="pipeline-heading"><span class="section-kicker">О ПРОЕКТЕ</span><h2 id="pipeline-heading">Код. Проверка. Запуск.</h2><p>Учебный CI/CD-конвейер<br>на GitHub Actions</p><ol class="pipeline-list"><li><span>01</span> Качество кода <small>Ruff</small></li><li><span>02</span> Автотесты <small>pytest</small></li><li><span>03</span> ZIP-артефакт <small>build</small></li><li><span>04</span> Тестовый запуск <small>/health</small></li></ol><p class="pipeline-disclaimer">Схема процесса. Результаты запусков доступны в GitHub Actions.</p></section>
           </aside>
         </div>
-        <footer class="page-footer"><span>DevOps Task Manager <span class="footer-dot">·</span> Создавайте с уверенностью</span><span>Python / Flask / SQLite</span></footer>
+        <footer class="page-footer"><span>DevOps Task Manager <span class="footer-dot">·</span> Версия {{ config.APP_VERSION }}{% if config.GIT_SHA %} · <code>{{ config.GIT_SHA[:7] }}</code>{% endif %}</span><span>Python / Flask / SQLite</span></footer>
       </div>
     </main>
   </div>
