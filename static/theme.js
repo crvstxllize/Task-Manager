@@ -37,6 +37,63 @@
       try { localStorage.setItem(key, theme); } catch { /* Tab-only preference. */ }
     }
 
+    // Load the isolated layer's stylesheet before the first interaction.
+    const preview = document.createElement("div");
+    preview.className = "theme-preview";
+    preview.inert = true;
+    const shadow = preview.attachShadow({mode: "open"});
+    const css = document.querySelector('link[rel="stylesheet"]').cloneNode();
+    const loaded = new Promise(resolve => {
+      css.onload = () => resolve(true);
+      css.onerror = () => resolve(false);
+    });
+    const content = document.createElement("div");
+    shadow.append(css, content);
+    root.append(preview);
+
+    async function revealPreview(theme) {
+      try {
+        if (await loaded && !reduced.matches) {
+          if (root.classList.contains("entry-prepaint")) {
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          }
+          preview.dataset.theme = theme;
+          const copy = document.body.cloneNode(true);
+          copy.querySelector("#theme-toggle").setAttribute("aria-pressed", String(theme === "light"));
+          content.classList.toggle("dashboard-enter", root.classList.contains("dashboard-enter"));
+          content.replaceChildren(copy);
+          preview.scrollTop = window.scrollY;
+          copy.querySelector("#task-list").scrollTop = document.querySelector("#task-list").scrollTop;
+
+          // Match the entry transforms as well as the rotation of the artwork.
+          // A panel whose entrance already finished must stay at its final position.
+          const moving = ".ambient i, .orbit i, .core, .masthead, .release, .stat-card, .tasks, .progress-panel, .project-panel";
+          const originals = document.body.querySelectorAll(moving);
+          const copies = copy.querySelectorAll(moving);
+          const pending = [];
+          copies.forEach((element, index) => {
+            const sources = originals[index].getAnimations();
+            for (const target of element.getAnimations()) {
+              const source = sources.find(item => item.animationName === target.animationName);
+              if (!source) target.cancel();
+              else if (source.startTime != null) target.startTime = source.startTime;
+              else pending.push(source.ready.then(() => {
+                if (source.startTime != null) target.startTime = source.startTime;
+              }));
+            }
+          });
+          if (pending.length) await Promise.allSettled(pending);
+          preview.classList.add("revealing");
+          const animation = preview.getAnimations().find(item => item.animationName === "theme-circle");
+          if (animation) await animation.finished.catch(() => {});
+        }
+      } finally {
+        apply(theme);
+        preview.classList.remove("revealing");
+        content.replaceChildren();
+      }
+    }
+
     async function render() {
       if (running) return;
       running = true;
@@ -46,11 +103,6 @@
           const theme = requested;
           if (reduced.matches) {
             apply(theme);
-          } else if (typeof document.startViewTransition !== "function") {
-            root.classList.add("theme-fade");
-            apply(theme);
-            await new Promise(resolve => setTimeout(resolve, 180));
-            root.classList.remove("theme-fade");
           } else {
             const rect = origin.getBoundingClientRect();
             const x = rect.left + rect.width / 2;
@@ -58,14 +110,9 @@
             const radius = Math.ceil(Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)));
             root.style.setProperty("--reveal-origin", x + "px " + y + "px");
             root.style.setProperty("--reveal-radius", radius + "px");
-            root.classList.add("theme-reveal");
             try {
-              const transition = document.startViewTransition(() => apply(theme));
-              await transition.finished;
-            } catch {
-              apply(theme);
+              await revealPreview(theme);
             } finally {
-              root.classList.remove("theme-reveal");
               root.style.removeProperty("--reveal-origin");
               root.style.removeProperty("--reveal-radius");
             }
@@ -77,7 +124,6 @@
     }
 
     button.addEventListener("click", event => {
-      root.classList.remove("dashboard-enter");
       requested = requested === "light" ? "dark" : "light";
       origin = event.detail ? (event.target.closest("svg") || button)
         : button.querySelector(requested === "light" ? ".sun" : ".moon");
