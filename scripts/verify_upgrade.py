@@ -106,29 +106,29 @@ def verify_upgrade(old_ref, new_ref):
             before_id, before_completed, before_status = session.task(title)
             if before_id != task_id or not before_completed:
                 raise RuntimeError("Old deployment did not mark the task as completed")
-            print(
+            before = (
                 f"Before upgrade: SHA={old_sha} container={old_id} "
-                f"volume={old_volume} task_id={task_id} status={before_status}",
-                flush=True,
+                f"volume={old_volume} task_id={task_id} status={before_status}"
             )
+            print(before, flush=True)
 
             deployment = (new_file, new_env)
             new_id, new_volume, new_url = deploy(new_file, new_env, new_sha)
             after_id, after_completed, after_status = TaskSession(new_url).task(title)
-            print(
+            after = (
                 f"After upgrade: SHA={new_sha} container={new_id} "
-                f"volume={new_volume} task_id={after_id} status={after_status}",
-                flush=True,
+                f"volume={new_volume} task_id={after_id} status={after_status}"
             )
+            print(after, flush=True)
             if new_id == old_id or new_volume != old_volume:
                 raise RuntimeError("Upgrade must replace the container and retain the volume")
             if after_id != task_id or not after_completed or after_status != "Завершена":
                 raise RuntimeError("Upgrade did not retain the completed task")
-            print(
+            result = (
                 f"Upgrade preserved task_id={task_id} status={after_status} "
-                f"on the same SQLite volume {new_volume}",
-                flush=True,
+                f"on the same SQLite volume {new_volume}"
             )
+            print(result, flush=True)
         except Exception:
             if deployment:
                 compose(*deployment, "logs", "--no-color", "web")
@@ -140,6 +140,12 @@ def verify_upgrade(old_ref, new_ref):
             finally:
                 if images:
                     run("docker", "image", "rm", *images)
+
+    if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
+        with Path(summary).open("a", encoding="utf-8") as output:
+            output.write(
+                f"## Verify upgrade preserves tasks\n\n```text\n{before}\n{after}\n{result}\n```\n"
+            )
 
 
 if __name__ == "__main__":
