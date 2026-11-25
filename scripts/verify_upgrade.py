@@ -146,6 +146,10 @@ def verify_upgrade(old_ref, new_ref):
             output.write(
                 f"## Verify upgrade preserves tasks\n\n```text\n{before}\n{after}\n{result}\n```\n"
             )
+        print(
+            "::notice title=Verify upgrade preserves tasks::" + "%0A".join((before, after, result)),
+            flush=True,
+        )
 
 
 if __name__ == "__main__":
