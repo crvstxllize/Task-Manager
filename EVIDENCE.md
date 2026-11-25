@@ -1,21 +1,9 @@
-# Реальные материалы для отчёта СРС №1
+# Что показать на защите
 
-Скриншоты необходимо сделать самостоятельно после выполнения соответствующих
-команд. Этот файл — список доказательств, а не заявление об успешном GitHub Actions.
+1. **Работающее приложение.** Откройте <http://127.0.0.1:5002/>. Покажите создание, завершение и отображение задачи в списке. Сверьте SHA в интерфейсе с `/version`.
+2. **Локальный контейнер.** Покажите `docker compose ps` со статусом `healthy` и портами `5002 → 5000`. Откройте `/health` и `/version`. В конфигурации Compose покажите подключение тома к `/data`.
+3. **Основной сценарий CI.** В успешном Docker-workflow откройте `Check code quality`, `Test application`, `Build image from the tested commit`, `Deploy built image and wait for health` и `Verify HTTP health, Git revision and task persistence`. В логах последнего шага найдите `Healthcheck passed`, `Verified /version` и `HTTP CRUD passed`. [Подтверждённый прогон main для f379362](https://github.com/crvstxllize/Task-Manager/actions/runs/45466388148)
+4. **Обновление с сохранением данных.** Откройте `Verify upgrade preserves tasks`. Сопоставьте строки `Before upgrade` и `After upgrade`: SHA и ID контейнера различаются, том и ID задачи совпадают. В старой версии завершённая задача помечена «Готово», в новой — «Завершена». Строка `Upgrade preserved task_id=` подтверждает сохранность задачи.
+5. **ZIP.** При необходимости скачайте артефакт и откройте шаг `Healthcheck - start Flask, wait, verify HTTP CRUD and stop`. [Подтверждённый ZIP-прогон main для f379362](https://github.com/crvstxllize/Task-Manager/actions/runs/45466388287)
 
-- [ ] VS Code: дерево проекта с app.py, templates, static, tests, scripts и workflow.
-- [ ] Работающий DevOps Task Manager: несколько самостоятельно созданных задач,
-      активная и завершённая задача, счётчики и прогресс.
-- [ ] PowerShell: успешный `.venv\Scripts\python.exe -m pytest -v`
-      с количеством пройденных тестов.
-- [ ] PowerShell: `ruff check .` и `ruff format --check .` без ошибок.
-- [ ] /health в браузере или PowerShell: HTTP 200 и JSON {"status":"ok"}.
-- [ ] GitHub Actions: реальный зелёный pipeline, обе job и названия этапов.
-- [ ] ZIP-артефакт: раздел Artifacts успешного запуска и содержимое скачанного ZIP.
-- [ ] Логи Deploy to Test и Healthcheck: отдельная папка, чистая среда,
-      PID Flask, HTTP 200, успешный HTTP CRUD и остановка процесса.
-- [ ] История не менее двух завершённых запусков CI/CD в GitHub Actions.
-
-Не подделывайте зелёные статусы, HTTP-ответы и логи. При сбое сначала исправьте
-причину и запустите проверки повторно. Публичный постоянный сайт для этой СРС
-не требуется: тестовая среда GitHub Actions существует только во время job.
+На шагах 3 и 4 GitHub Actions выполняет автоматическое развёртывание и обновление во временной тестовой среде. Контейнеры и тестовые данные удаляются после завершения проверки.

@@ -4,14 +4,59 @@ import argparse
 import json
 import re
 import time
+from html import escape
 from http.cookiejar import CookieJar
 from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPCookieProcessor, Request, build_opener
 
 
+class TaskSession:
+    """Interact with the same forms and session cookie as a browser."""
+
+    def __init__(self, url):
+        self.url = url
+        self.opener = build_opener(HTTPCookieProcessor(CookieJar()))
+        token = re.search(r'name="csrf_token" value="([^"]+)"', self.page())
+        if not token:
+            raise RuntimeError("CSRF token missing from rendered form")
+        self.token = token[1]
+
+    def page(self):
+        with self.opener.open(f"{self.url}/", timeout=5) as response:
+            return response.read().decode("utf-8")
+
+    def post(self, path, **fields):
+        data = urlencode({"csrf_token": self.token, **fields}).encode()
+        with self.opener.open(Request(f"{self.url}{path}", data=data), timeout=5) as response:
+            if response.status != 200:
+                raise RuntimeError(f"HTTP action failed: {response.status}")
+
+    def task(self, title):
+        html = self.page()
+        item = f'<span class="task-title">{escape(title)}</span>'
+        matches = [
+            (classes, row)
+            for classes, row in re.findall(
+                r'<li class="(task-row[^"]*)"[^>]*>(.*?)</li>', html, re.S
+            )
+            if item in row
+        ]
+        if len(matches) != 1:
+            raise RuntimeError(f"Expected one rendered task named {title!r}, got {len(matches)}")
+        classes, row = matches[0]
+        task_id = re.search(r'action="/tasks/(\d+)/toggle"', row)
+        if not task_id:
+            raise RuntimeError("Rendered task has no toggle action")
+        completed = "is-complete" in classes.split()
+        label = re.search(r">\s*(В работе|Готово|Завершена)\s*<", row)
+        if not label or completed != (label[1] != "В работе"):
+            raise RuntimeError("Rendered task status does not match its completion state")
+        return task_id[1], completed, label[1]
+
+
 def check_service(url, timeout=30, crud=False, expected_sha=None):
-    opener = build_opener(HTTPCookieProcessor(CookieJar()))
+    opener = build_opener()
     deadline = time.monotonic() + timeout
     last_error = None
     while time.monotonic() < deadline:
@@ -38,49 +83,21 @@ def check_service(url, timeout=30, crud=False, expected_sha=None):
     if not crud:
         return
 
-    def page():
-        with opener.open(f"{url}/", timeout=5) as response:
-            return response.read().decode("utf-8")
-
-    def post(path, data):
-        encoded = urlencode(data).encode("utf-8")
-        with opener.open(Request(f"{url}{path}", data=encoded), timeout=5) as response:
-            if response.status != 200:
-                raise RuntimeError(f"HTTP action failed: {response.status}")
-            return response.read().decode("utf-8")
-
-    html = page()
-    token_match = re.search(r'name="csrf_token" value="([^"]+)"', html)
-    if not token_match:
-        raise RuntimeError("CSRF token missing from rendered form")
-    token = token_match[1]
+    session = TaskSession(url)
     title = f"HTTP smoke task {time.time_ns()}"
-    post("/tasks", {"title": title, "csrf_token": token})
-    html = page()
-    if title not in html:
-        raise RuntimeError("Created task not visible")
+    session.post("/tasks", title=title)
+    task_id, completed, _ = session.task(title)
     print(f"Verified created task on a fresh GET /: {title}", flush=True)
-    # Новая активная задача находится первой по принятому порядку сортировки.
-    task_match = re.search(r'action="/tasks/(\d+)/toggle"', html)
-    if not task_match:
-        raise RuntimeError("Created task has no toggle action")
-    task_id = task_match[1]
     try:
+        if completed:
+            raise RuntimeError("New task unexpectedly completed")
         for completed in (True, False):
-            html = post(f"/tasks/{task_id}/toggle", {"csrf_token": token})
-            row = next(
-                (
-                    row
-                    for row in re.findall(r'<li class="task-row.*?</li>', html, re.S)
-                    if title in row
-                ),
-                "",
-            )
-            if not row or ('class="task-row is-complete"' in row) != completed:
+            session.post(f"/tasks/{task_id}/toggle")
+            if session.task(title)[:2] != (task_id, completed):
                 raise RuntimeError("Task status was not persisted in rendered page")
     finally:
-        html = post(f"/tasks/{task_id}/delete", {"csrf_token": token})
-    if title in html:
+        session.post(f"/tasks/{task_id}/delete")
+    if title in session.page():
         raise RuntimeError("Deleted task still visible")
     print("HTTP CRUD passed: create -> complete -> reopen -> delete.", flush=True)
 
