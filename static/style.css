@@ -1,4 +1,4 @@
-:root {
+:root, :host {
   color-scheme: dark;
   --focus:#c7b5ff;
   --header-line:#302f35;
@@ -68,7 +68,7 @@
   --bg:#131316; --panel:#1d1d22; --ink:#f6f3ed; --muted:#b2afb9; --line:#38373f; --uv:#9976ff;
   font:16px/1.45 "Segoe UI",system-ui,sans-serif; background:var(--bg); color:var(--ink);
 }
-:root[data-theme="light"] {
+:root[data-theme="light"], :host([data-theme="light"]) {
   color-scheme: light;
   --bg:#edf4f7; --panel:#fafdfd; --ink:#1d323c; --muted:#4c626d; --line:#bdd0d7; --uv:#007681;
   --focus:#046d79;
@@ -142,8 +142,8 @@
 #theme-toggle svg {box-sizing:content-box;width:16px;height:16px;padding:4px;border-radius:50%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
 #theme-toggle:hover {border-color:var(--scroll-hover)}
 #theme-toggle[aria-pressed=false] .moon,#theme-toggle[aria-pressed=true] .sun {background:var(--row-hover);color:var(--percent)}
-:root[data-theme=light] .ambient {background:linear-gradient(120deg,var(--bg),var(--ambient) 45%,var(--panel))}
-:root[data-theme=light] .ambient i {width:95vw;height:42vh;rotate:-26deg;filter:blur(25px)}
+:root[data-theme=light] .ambient, :host([data-theme=light]) .ambient {background:linear-gradient(120deg,var(--bg),var(--ambient) 45%,var(--panel))}
+:root[data-theme=light] .ambient i, :host([data-theme=light]) .ambient i {width:95vw;height:42vh;rotate:-26deg;filter:blur(25px)}
 * {box-sizing:border-box}
 body,h1,h2,dl,dd,ul,p,form {margin:0}
 button,input {font:inherit;color:inherit}
@@ -333,12 +333,8 @@ body {isolation:isolate;min-height:100vh}
  *,*::before,*::after {animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
 
-.theme-reveal::view-transition {pointer-events:none}
-.theme-reveal::view-transition-group(root),
-.theme-reveal::view-transition-old(root),
-.theme-reveal::view-transition-new(root) {animation:none;mix-blend-mode:normal}
-.theme-reveal::view-transition-old(root) {z-index:0}
-.theme-reveal::view-transition-new(root) {z-index:1}
+.theme-preview {position:fixed;inset:0;z-index:2147483647;overflow:hidden;pointer-events:none;visibility:hidden}
+.theme-preview.revealing {visibility:visible}
 @media(prefers-reduced-motion:no-preference) {
  .dashboard-enter .workspace {--entry-rise:44px;overflow:clip}
  .dashboard-enter .masthead {--entry-rise:18px}
@@ -359,15 +355,13 @@ body {isolation:isolate;min-height:100vh}
    from {opacity:0;transform:translateY(var(--entry-rise))}
    to {opacity:1;transform:translateY(0)}
  }
- .theme-reveal::view-transition-new(root) {
-   animation:theme-circle 900ms cubic-bezier(.22,.65,.24,1) both;
+ .theme-fade, .theme-fade *, .theme-fade *::before, .theme-fade *::after {
+   transition:background-color 180ms ease-out,color 180ms ease-out,border-color 180ms ease-out;
  }
+ .theme-preview.revealing {animation:theme-circle 900ms cubic-bezier(.22,.65,.24,1) both}
  @keyframes theme-circle {
    from {clip-path:circle(0px at var(--reveal-origin))}
    to {clip-path:circle(var(--reveal-radius) at var(--reveal-origin))}
- }
- .theme-fade,.theme-fade *, .theme-fade *::before,.theme-fade *::after {
-   transition:background-color 180ms ease-out,color 180ms ease-out,border-color 180ms ease-out;
  }
 }
 @media(max-width:700px) and (prefers-reduced-motion:no-preference) {
