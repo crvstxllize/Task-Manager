@@ -41,19 +41,23 @@
     const preview = document.createElement("div");
     preview.className = "theme-preview";
     preview.inert = true;
-    const shadow = preview.attachShadow({mode: "open"});
+    const shadow = preview.attachShadow?.({mode: "open"});
+    const canReveal = shadow && typeof preview.getAnimations === "function" &&
+      CSS.supports("clip-path", "circle(0px at 0px 0px)");
     const css = document.querySelector('link[rel="stylesheet"]').cloneNode();
     const loaded = new Promise(resolve => {
       css.onload = () => resolve(true);
       css.onerror = () => resolve(false);
     });
     const content = document.createElement("div");
-    shadow.append(css, content);
-    root.append(preview);
+    if (canReveal) {
+      shadow.append(css, content);
+      root.append(preview);
+    }
 
     async function revealPreview(theme) {
       try {
-        if (await loaded && !reduced.matches) {
+        if (!reduced.matches) {
           if (root.classList.contains("entry-prepaint")) {
             await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
           }
@@ -103,6 +107,11 @@
           const theme = requested;
           if (reduced.matches) {
             apply(theme);
+          } else if (!canReveal || !await loaded) {
+            root.classList.add("theme-fade");
+            apply(theme);
+            await new Promise(resolve => setTimeout(resolve, 180));
+            root.classList.remove("theme-fade");
           } else {
             const rect = origin.getBoundingClientRect();
             const x = rect.left + rect.width / 2;
