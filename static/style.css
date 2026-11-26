@@ -156,11 +156,7 @@ a {color:inherit;text-decoration:none}
 .bar,.brand,.bar nav,.release-meta,.tasks-head,.input-group {display:flex;align-items:center}
 .bar {height:64px;justify-content:space-between;gap:16px}
 .brand {gap:11px;font-size:18px;font-weight:650;letter-spacing:-.045em}
-.brand-mark {position:relative;width:32px;height:32px;flex:none}
-.brand-mark::before,.brand-mark i {position:absolute;width:23px;height:23px;border-radius:7px;transform:rotate(-11deg)}
-.brand-mark::before {content:"";left:1px;bottom:1px;background:linear-gradient(135deg,var(--logo-base),var(--logo-shadow))}
-.brand-mark i {top:1px;right:1px;display:grid;place-items:center;background:linear-gradient(135deg,var(--logo-light),var(--logo-front));border:1px solid var(--logo-edge)}
-.brand-mark i::after {content:"";width:10px;height:5px;border:solid var(--logo-check);border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-34deg)}
+.brand-mark {display:block;width:32px;height:32px;flex:none}
 .release-label {font-size:14px;color:var(--muted);letter-spacing:0}
 .masthead .release-number {font:600 17px/1.2 Consolas,Menlo,monospace;margin:0;letter-spacing:0}
 .release #release-heading {font-size:clamp(22.5px,3vw,48px);font-weight:600;letter-spacing:-.055em;line-height:1.04;margin-bottom:9px;color:var(--ink)}
@@ -216,6 +212,9 @@ code {font-family:Consolas,Menlo,monospace}
 .stat-card dd {margin-top:2px;font-size:clamp(28px,2.7vw,38px);line-height:1.12;letter-spacing:-.055em;font-weight:550;font-variant-numeric:tabular-nums}
 .details {display:grid;grid-template-columns:minmax(215px,1fr) minmax(0,2.25fr);gap:16px;margin-top:18px}
 .details section {padding:21px 23px;border:1px solid var(--line);border-radius:15px;background:var(--panel)}
+.deploy-panel {grid-column:-2/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.panel-link {display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:5px 12px;border:1px solid var(--line);border-radius:8px;background:var(--total-tint);color:var(--uv);font-size:14px;font-weight:600;text-decoration:none}
+.panel-link:hover {border-color:var(--uv)}
 .details .progress-panel {background:linear-gradient(115deg,var(--progress-tint),var(--panel))}
 .details h2 {font-size:18px;font-weight:600;letter-spacing:-.025em}
 .percentage {color:var(--percent);font-variant-numeric:tabular-nums;line-height:1.15;margin:12px 0}
@@ -338,10 +337,10 @@ body {isolation:isolate;min-height:100vh}
 @media(prefers-reduced-motion:no-preference) {
  .dashboard-enter .workspace {--entry-rise:44px;overflow:clip}
  .dashboard-enter .masthead {--entry-rise:18px}
- .dashboard-enter :is(.masthead,.release,.stat-card,.tasks,.progress-panel,.project-panel) {
+ .dashboard-enter :is(.masthead,.release,.stat-card,.tasks,.progress-panel,.project-panel,.deploy-panel) {
    animation:panel-enter 880ms cubic-bezier(.4,0,.22,1) var(--entry-delay,0ms) backwards;
  }
- .dashboard-enter.entry-prepaint :is(.masthead,.release,.stat-card,.tasks,.progress-panel,.project-panel) {
+ .dashboard-enter.entry-prepaint :is(.masthead,.release,.stat-card,.tasks,.progress-panel,.project-panel,.deploy-panel) {
    animation-play-state:paused;
  }
  .dashboard-enter .release {--entry-delay:110ms}
@@ -350,7 +349,7 @@ body {isolation:isolate;min-height:100vh}
  .dashboard-enter .stat-completed {--entry-delay:330ms}
  .dashboard-enter .tasks {--entry-delay:390ms}
  .dashboard-enter .progress-panel {--entry-delay:450ms}
- .dashboard-enter .project-panel {--entry-delay:510ms}
+ .dashboard-enter :is(.project-panel,.deploy-panel) {--entry-delay:510ms}
  @keyframes panel-enter {
    from {opacity:0;transform:translateY(var(--entry-rise))}
    to {opacity:1;transform:translateY(0)}

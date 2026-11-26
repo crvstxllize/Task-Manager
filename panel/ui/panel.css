@@ -2,7 +2,8 @@ body {display:block;height:auto}
 main.frame {padding-block:28px}
 .hero,.checks,.columns section {background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:22px}
 .hero {display:flex;gap:20px;align-items:center;justify-content:space-between;background:linear-gradient(112deg,var(--hero-left),var(--hero-center),var(--hero-right))}
-.hero h1 {font-size:clamp(24px,4vw,48px);letter-spacing:-.045em}
+.hero h1 {font-size:clamp(22px,3vw,36px);line-height:1.14;letter-spacing:-.04em}
+.hero {padding:20px clamp(17px,2vw,28px)}
 .hero p,.checks p {margin:8px 0;color:var(--muted)}
 code {color:var(--percent);overflow-wrap:anywhere}
 .actions,#checks {display:flex;gap:14px;align-items:center;flex-wrap:wrap}
@@ -10,7 +11,7 @@ code {color:var(--percent);overflow-wrap:anywhere}
 .checks,.columns {margin-top:16px}
 .columns {display:grid;grid-template-columns:minmax(250px,1fr) minmax(0,2fr);gap:16px}
 h2 {font-size:20px;margin:0 0 10px}
-#theme,.run {background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 12px}
+.run {background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 12px}
 #runs {max-height:450px;overflow:auto}.run {width:100%;text-align:left;display:grid;gap:5px;margin-bottom:6px}
 .run[aria-pressed=true] {border-color:var(--percent)}
 .run small,#checks {color:var(--muted)}

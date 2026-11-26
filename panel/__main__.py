@@ -32,6 +32,9 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_error(403)
         files = {
             "/": (UI / "index.html", "text/html; charset=utf-8"),
+            "/deploy-icon.png": (UI / "deploy-icon.png", "image/png"),
+            "/deploy-mark.svg": (UI / "deploy-mark.svg", "image/svg+xml"),
+            "/theme.js": (deploy.ROOT / "static/theme.js", "application/javascript"),
             "/panel.js": (UI / "panel.js", "application/javascript"),
             "/panel.css": (UI / "panel.css", "text/css"),
             "/style.css": (deploy.ROOT / "static/style.css", "text/css"),

@@ -1,14 +1,4 @@
 const byId = id => document.getElementById(id);
-const theme = byId("theme");
-function setTheme(value) {
-  document.documentElement.dataset.theme = value;
-  theme.setAttribute("aria-pressed", String(value === "light"));
-}
-setTheme(localStorage.getItem("theme") || "dark");
-theme.onclick = () => {
-  setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
-  localStorage.setItem("theme", document.documentElement.dataset.theme);
-};
 const originName = source => source === "manual" ? "вручную" : "автоматически";
 let selected, historyKey;
 async function refresh() {
