@@ -59,3 +59,7 @@ Git checkout → Ruff → pytest → Docker build → Compose up → healthy →
 ## Проверки без Docker
 
 Активируйте отдельное окружение Python 3.12 и установите зависимости командой `python -m pip install -r requirements-dev.txt`. Запустите `python -m ruff check .`, `python -m ruff format --check .` и `python -m pytest -q`. Для запуска Flask без Docker используйте `python app.py` и <http://127.0.0.1:5000/>. В этом режиме по умолчанию используется `instance/tasks.sqlite3`. Тесты используют временные базы.
+
+## Локальная панель развёртывания на macOS
+
+[Запуск панели, проверка обновления и сценарий защиты на 60 секунд](PANEL.md).
