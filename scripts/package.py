@@ -17,6 +17,8 @@ RELEASE_FILES = (
     ".github/workflows/ci.yml",
     "templates/index.html",
     "static/style.css",
+    "static/task-mark.svg",
+    "static/task-icon.png",
     "static/theme.js",
     "static/tasks.js",
     "static/release.js",

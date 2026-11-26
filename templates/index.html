@@ -2,10 +2,11 @@
 <input type="hidden" name="csrf_token" value="{{ session['csrf_token'] }}">
 {%- endmacro %}
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-dashboard>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="{{ url_for('static', filename='task-icon.png') }}" type="image/png" sizes="64x64">
   <title>Мои задачи · DevOps Task Manager</title>
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -16,7 +17,7 @@
 <div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
 <header class="masthead">
   <div class="frame bar">
-    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i></span><span class="release-label">Текущий релиз</span>
+    <div class="brand"><img class="brand-mark" src="{{ url_for('static', filename='task-mark.svg') }}" width="32" height="32" alt=""><span class="release-label">Текущий релиз</span>
       <span class="release-number" aria-label="Версия {{ config.APP_VERSION }}">{{ config.APP_VERSION }}</span>
     </div>
     <nav aria-label="Разделы"><a href="#tasks-heading">Задачи</a>
@@ -67,7 +68,7 @@
       </div>
     </form>
     <p id="form-error" role="alert">{{ error or '' }}</p>
-    <ul id="task-list" tabindex="0" aria-label="Список задач">
+    <ul id="task-list" data-theme-scroll tabindex="0" aria-label="Список задач">
     {% for task in tasks %}
       <li class="task-row{% if task.completed %} is-complete{% endif %}" id="task-{{ task.id }}">
         <form action="{{ url_for('toggle_task', task_id=task.id) }}" method="post">
@@ -109,6 +110,10 @@
         <li><code>{{ tool }}</code><span>{{ title }}</span></li>
         {% endfor %}
       </ol>
+    </section>
+    <section class="deploy-panel" aria-labelledby="deploy-heading">
+      <h2 id="deploy-heading">Развёртывание</h2>
+      <a class="panel-link" href="http://127.0.0.1:8000/">Открыть панель <span aria-hidden="true">↗</span></a>
     </section>
   </div>
 </main>

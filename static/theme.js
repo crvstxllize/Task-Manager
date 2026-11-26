@@ -1,6 +1,6 @@
 (() => {
   const root = document.documentElement;
-  const key = "devops-task-manager:theme";
+  const key = root.dataset.themeKey || "devops-task-manager:theme";
   try {
     if (localStorage.getItem(key) === "light") root.dataset.theme = "light";
   } catch { /* The default dark theme also works without storage. */ }
@@ -9,7 +9,7 @@
   const navigation = performance.getEntriesByType("navigation")[0];
   // A native form POST returns to / via 303. Animate a fresh visit or reload,
   // but keep that redirect and history traversal visually stable.
-  if (!reduced.matches && location.pathname === "/" && navigation &&
+  if (root.hasAttribute("data-dashboard") && !reduced.matches && location.pathname === "/" && navigation &&
       (navigation.type === "reload" || (navigation.type === "navigate" && !navigation.redirectCount))) {
     root.classList.add("dashboard-enter", "entry-prepaint");
     document.addEventListener("DOMContentLoaded", () => {
@@ -44,14 +44,16 @@
     const shadow = preview.attachShadow?.({mode: "open"});
     const canReveal = shadow && typeof preview.getAnimations === "function" &&
       CSS.supports("clip-path", "circle(0px at 0px 0px)");
-    const css = document.querySelector('link[rel="stylesheet"]').cloneNode();
-    const loaded = new Promise(resolve => {
-      css.onload = () => resolve(true);
-      css.onerror = () => resolve(false);
-    });
     const content = document.createElement("div");
+    const styles = [...document.querySelectorAll('link[rel="stylesheet"]')];
+    const loaded = canReveal && Promise.all(styles.map(style => new Promise(resolve => {
+      const link = style.cloneNode();
+      link.onload = () => resolve(true);
+      link.onerror = () => resolve(false);
+      shadow.append(link);
+    }))).then(results => results.every(Boolean));
     if (canReveal) {
-      shadow.append(css, content);
+      shadow.append(content);
       root.append(preview);
     }
 
@@ -67,11 +69,15 @@
           content.classList.toggle("dashboard-enter", root.classList.contains("dashboard-enter"));
           content.replaceChildren(copy);
           preview.scrollTop = window.scrollY;
-          copy.querySelector("#task-list").scrollTop = document.querySelector("#task-list").scrollTop;
+          for (const scroller of copy.querySelectorAll("[data-theme-scroll]")) {
+            const original = document.getElementById(scroller.id);
+            scroller.scrollTop = original.scrollTop;
+            scroller.scrollLeft = original.scrollLeft;
+          }
 
           // Match the entry transforms as well as the rotation of the artwork.
           // A panel whose entrance already finished must stay at its final position.
-          const moving = ".ambient i, .orbit i, .core, .masthead, .release, .stat-card, .tasks, .progress-panel, .project-panel";
+          const moving = ".ambient i, .orbit i, .core, .masthead, .release, .stat-card, .tasks, .progress-panel, .project-panel, .deploy-panel";
           const originals = document.body.querySelectorAll(moving);
           const copies = copy.querySelectorAll(moving);
           const pending = [];
