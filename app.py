@@ -98,6 +98,10 @@ def create_app(test_config=None):
     def index():
         return render_dashboard()
 
+    @app.get("/favicon.ico")
+    def favicon():
+        return app.send_static_file("task-mark.ico")
+
     @app.get("/health")
     def health():
         return jsonify(status="ok")

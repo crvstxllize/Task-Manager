@@ -18,6 +18,7 @@ RELEASE_FILES = (
     "templates/index.html",
     "static/style.css",
     "static/task-mark.svg",
+    "static/task-mark.ico",
     "static/task-icon.png",
     "static/theme.js",
     "static/tasks.js",
